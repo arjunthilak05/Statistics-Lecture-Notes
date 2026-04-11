@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Math Powers AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1117;--bg2:#161b27;--text:#e8eaf0;--muted:#8892a4;
+  --card:rgba(255,255,255,0.04);--radius:16px;
+  --blue:#3b82f6;--orange:#f97316;--green:#10b981;--purple:#8b5cf6;--pink:#ec4899;--red:#ef4444;--amber:#f59e0b;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(139,92,246,0.18) 0%,transparent 70%),
+             radial-gradient(ellipse 50% 40% at 80% 90%,rgba(16,185,129,0.12) 0%,transparent 60%),var(--bg);}
+.hero-badge{font-family:'Fira Code',monospace;font-size:12px;color:var(--purple);background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);padding:6px 16px;border-radius:50px;letter-spacing:2px;margin-bottom:24px;display:inline-block;}
+.hero h1{font-family:'Fredoka One',cursive;font-size:clamp(2.4rem,7vw,5rem);line-height:1.05;
+  background:linear-gradient(135deg,#fff 10%,var(--purple) 35%,var(--blue) 55%,var(--green) 75%,var(--orange) 90%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px;}
+.hero p{font-size:20px;color:var(--muted);max-width:720px;line-height:1.7;margin-bottom:36px;}
+
+.wrapper{max-width:900px;margin:0 auto;padding:0 20px 100px;}
+
+.section-divider{display:flex;align-items:center;gap:14px;margin:70px 0 28px;}
+.section-divider .label{font-family:'Fredoka One',cursive;font-size:26px;white-space:nowrap;}
+.section-divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--accent,rgba(255,255,255,0.1)),transparent);}
+.div-a .label{color:var(--purple);}.div-a{--accent:rgba(139,92,246,0.4);}
+.div-b .label{color:var(--blue);}.div-b{--accent:rgba(59,130,246,0.4);}
+.div-c .label{color:var(--green);}.div-c{--accent:rgba(16,185,129,0.4);}
+.div-d .label{color:var(--orange);}.div-d{--accent:rgba(249,115,22,0.4);}
+.div-e .label{color:var(--pink);}.div-e{--accent:rgba(236,72,153,0.4);}
+
+.card{background:var(--card);border:1px solid rgba(255,255,255,0.07);border-radius:var(--radius);padding:28px 32px;margin-bottom:20px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--stripe,rgba(255,255,255,0.15)),transparent);}
+.ca::before{--stripe:rgba(139,92,246,0.7);}.cb::before{--stripe:rgba(59,130,246,0.7);}.cc::before{--stripe:rgba(16,185,129,0.7);}.cd::before{--stripe:rgba(249,115,22,0.7);}.ce::before{--stripe:rgba(236,72,153,0.7);}
+.card h3{font-family:'Fredoka One',cursive;font-size:22px;margin-bottom:14px;}
+.ca h3{color:var(--purple);}.cb h3{color:var(--blue);}.cc h3{color:var(--green);}.cd h3{color:var(--orange);}.ce h3{color:var(--pink);}
+.card p,.card li{font-size:17px;line-height:1.75;color:rgba(255,255,255,0.72);}
+.card strong{color:#fff;}
+.tip{border-radius:8px;padding:13px 16px;margin-top:16px;font-size:16px;border-left:3px solid;}
+.tip-p{background:rgba(139,92,246,0.06);border-color:var(--purple);}
+.tip-b{background:rgba(59,130,246,0.06);border-color:var(--blue);}
+.tip-g{background:rgba(16,185,129,0.06);border-color:var(--green);}
+.tip-o{background:rgba(249,115,22,0.06);border-color:var(--orange);}
+.tip-pk{background:rgba(236,72,153,0.06);border-color:var(--pink);}
+.code-line{font-family:'Fira Code',monospace;background:#0a0f1a;border:1px solid rgba(255,255,255,0.1);padding:14px 18px;border-radius:10px;font-size:14px;color:#7ee787;margin:12px 0;white-space:pre-wrap;line-height:1.7;}
+.output-c{background:#000;border:2px solid rgba(126,231,135,0.3);border-radius:10px;padding:14px 16px;font-family:'Fira Code',monospace;color:#7ee787;font-size:13px;margin-top:8px;line-height:1.9;}
+.btn{padding:11px 28px;border:none;border-radius:50px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.25s;margin:6px 4px;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.35);}
+.btn-p{background:linear-gradient(135deg,var(--purple),var(--pink));color:white;}
+.btn-b{background:linear-gradient(135deg,var(--blue),#0ea5e9);color:white;}
+.btn-g{background:linear-gradient(135deg,var(--green),#14b8a6);color:#000;}
+.btn-o{background:linear-gradient(135deg,var(--orange),var(--amber));color:#000;}
+.res{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:18px;margin-top:14px;}
+
+/* BIG BRIDGE DIAGRAM */
+.bridge{display:grid;grid-template-columns:1fr 60px 1fr;gap:0;margin:24px 0;align-items:stretch;}
+.bridge-left,.bridge-right{display:flex;flex-direction:column;gap:10px;}
+.b-item{border-radius:12px;padding:14px 16px;border:2px solid;text-align:center;transition:all 0.3s;}
+.b-arrow{display:flex;flex-direction:column;justify-content:space-around;align-items:center;gap:4px;}
+.arrow-row{display:flex;align-items:center;gap:4px;}
+.arrow-line{height:2px;width:20px;background:rgba(255,255,255,0.15);}
+.arrow-head{color:rgba(255,255,255,0.25);font-size:14px;}
+.b-label{font-family:'Fredoka One',cursive;font-size:13px;margin-bottom:4px;}
+.b-sub{font-size:12px;color:var(--muted);}
+
+/* SIMILARITY DEMO */
+.sim-bar-wrap{height:10px;background:rgba(255,255,255,0.07);border-radius:5px;overflow:hidden;margin:4px 0;}
+.sim-bar{height:100%;border-radius:5px;transition:width 0.4s;}
+.movie-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin:6px 0;}
+
+/* PIXEL GRID */
+.pixel-grid{display:grid;gap:2px;margin:12px auto;}
+.px{width:32px;height:32px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'Fira Code',monospace;font-size:9px;color:rgba(0,0,0,0.6);font-weight:600;cursor:pointer;transition:all 0.2s;}
+
+/* NEURAL NET VIS */
+.nn-wrap{overflow-x:auto;}
+.nn-svg{display:block;margin:0 auto;}
+
+/* WORD VEC */
+.word-chip{display:inline-block;font-family:'Fira Code',monospace;font-size:12px;padding:5px 12px;border-radius:50px;margin:4px;border:1px solid;cursor:pointer;transition:all 0.2s;}
+.word-chip:hover{transform:translateY(-2px);}
+.vec-row{font-size:13px;color:var(--muted);margin:4px 0;line-height:1.9;}
+
+/* concept pills row */
+.concept-pills{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0;}
+.cpill{padding:8px 18px;border-radius:50px;font-size:14px;font-weight:700;border:2px solid;}
+
+@media(max-width:600px){.card{padding:18px 16px;}.bridge{grid-template-columns:1fr 40px 1fr;}.px{width:24px;height:24px;font-size:7px;}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">// LECTURE 2 · FROM MATH TO MACHINE INTELLIGENCE //</div>
+  <h1>Why Did We<br>Learn All That?</h1>
+  <p>Vectors and matrices aren't just textbook math. They are <strong style="color:#fff;">the actual code</strong> running inside every AI you've ever used — ChatGPT, Netflix, Google, face filters. Let's see exactly how.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+    <span class="cpill" style="color:var(--purple);border-color:rgba(139,92,246,0.5);">🎬 Netflix Recommendations</span>
+    <span class="cpill" style="color:var(--blue);border-color:rgba(59,130,246,0.5);">📸 Image Recognition</span>
+    <span class="cpill" style="color:var(--green);border-color:rgba(16,185,129,0.5);">🗣️ ChatGPT & Language</span>
+    <span class="cpill" style="color:var(--orange);border-color:rgba(249,115,22,0.5);">🧠 Neural Networks</span>
+  </div>
+</div>
+
+<div class="wrapper">
+
+<!-- ══ THE BRIDGE ══ -->
+<div class="section-divider div-a">
+  <div class="label">🔗 The Big Picture</div>
+</div>
+
+<div class="card ca">
+  <h3>Everything You Learned Has a Direct AI Job</h3>
+  <p>Here's the connection you were missing. Every concept from yesterday maps to something real inside AI systems.</p>
+
+  <div style="margin:24px 0;">
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:12px;">
+      <div style="background:rgba(139,92,246,0.1);border:2px solid rgba(139,92,246,0.4);border-radius:12px;padding:16px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;font-size:15px;color:var(--purple);">📐 Vector</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">ordered list of numbers</div>
+      </div>
+      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:var(--purple);text-align:center;">→</div>
+      <div style="background:rgba(139,92,246,0.1);border:2px solid rgba(139,92,246,0.4);border-radius:12px;padding:16px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;font-size:15px;color:var(--purple);">🎬 Movie Profile</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">[action, comedy, romance...]</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:12px;">
+      <div style="background:rgba(249,115,22,0.1);border:2px solid rgba(249,115,22,0.4);border-radius:12px;padding:16px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;font-size:15px;color:var(--orange);">⚡ Dot Product</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">how similar two vectors are</div>
+      </div>
+      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:var(--orange);text-align:center;">→</div>
+      <div style="background:rgba(249,115,22,0.1);border:2px solid rgba(249,115,22,0.4);border-radius:12px;padding:16px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;font-size:15px;color:var(--orange);">🔍 Similarity Score</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">how Netflix matches your taste</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:12px;">
+      <div style="background:rgba(59,130,246,0.1);border:2px solid rgba(59,130,246,0.4);border-radius:12px;padding:16px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;font-size:15px;color:var(--blue);">📊 Matrix</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">grid of numbers</div>
+      </div>
+      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:var(--blue);text-align:center;">→</div>
+      <div style="background:rgba(59,130,246,0.1);border:2px solid rgba(59,130,246,0.4);border-radius:12px;padding:16px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;font-size:15px;color:var(--blue);">📸 Image / Dataset</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">pixels = numbers in a grid</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;">
+      <div style="background:rgba(16,185,129,0.1);border:2px solid rgba(16,185,129,0.4);border-radius:12px;padding:16px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;font-size:15px;color:var(--green);">✖️ Matrix Multiply</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">rows × columns = new matrix</div>
+      </div>
+      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:var(--green);text-align:center;">→</div>
+      <div style="background:rgba(16,185,129,0.1);border:2px solid rgba(16,185,129,0.4);border-radius:12px;padding:16px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;font-size:15px;color:var(--green);">🧠 Neural Network Layer</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">how ChatGPT processes your input</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip tip-p">💡 <strong>One sentence summary:</strong> AI is just doing millions of vector and matrix operations per second on your data. That's the secret.</div>
+</div>
+
+
+<!-- ══ SECTION 1: NETFLIX / RECOMMENDATIONS ══ -->
+<div class="section-divider div-a">
+  <div class="label">🎬 Part 1 — Netflix Uses Dot Products</div>
+</div>
+
+<div class="card ca">
+  <h3>How Does Netflix Know What You'll Like?</h3>
+  <p>Every movie on Netflix is secretly stored as a <strong>vector of numbers</strong>. Each number represents how much of a certain quality the movie has.</p>
+
+  <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:20px;margin:16px 0;">
+    <div style="font-family:'Fredoka One',cursive;font-size:16px;color:var(--purple);margin-bottom:12px;text-align:center;">Movie → Vector</div>
+    <div style="display:grid;gap:8px;">
+      <div style="display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:center;">
+        <div style="font-family:'Fira Code',monospace;font-size:13px;color:var(--muted);">Action score</div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:6px 10px;font-family:'Fira Code',monospace;font-size:13px;color:var(--orange);">0.9  ← lots of action</div>
+      </div>
+      <div style="display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:center;">
+        <div style="font-family:'Fira Code',monospace;font-size:13px;color:var(--muted);">Comedy score</div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:6px 10px;font-family:'Fira Code',monospace;font-size:13px;color:var(--blue);">0.1  ← not very funny</div>
+      </div>
+      <div style="display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:center;">
+        <div style="font-family:'Fira Code',monospace;font-size:13px;color:var(--muted);">Romance score</div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:6px 10px;font-family:'Fira Code',monospace;font-size:13px;color:var(--pink);">0.0  ← zero romance</div>
+      </div>
+      <div style="display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:center;">
+        <div style="font-family:'Fira Code',monospace;font-size:13px;color:var(--muted);">Suspense score</div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:6px 10px;font-family:'Fira Code',monospace;font-size:13px;color:var(--green);">0.7  ← quite suspenseful</div>
+      </div>
+      <div style="margin-top:8px;text-align:center;font-family:'Fira Code',monospace;font-size:14px;color:var(--purple);">
+        Movie Vector = [<span style="color:var(--orange);">0.9</span>, <span style="color:var(--blue);">0.1</span>, <span style="color:var(--pink);">0.0</span>, <span style="color:var(--green);">0.7</span>]
+      </div>
+    </div>
+  </div>
+
+  <p>And <em>you</em> are also stored as a vector — based on what you've watched and liked!</p>
+  <div style="text-align:center;margin:12px 0;font-family:'Fira Code',monospace;font-size:14px;color:var(--blue);">
+    Your Taste Vector = [<span style="color:var(--orange);">0.8</span>, <span style="color:var(--blue);">0.2</span>, <span style="color:var(--pink);">0.1</span>, <span style="color:var(--green);">0.6</span>]
+  </div>
+
+  <p style="margin-top:12px;">To find how well a movie matches you, Netflix does a <strong>dot product</strong>:</p>
+  <div style="font-family:'Fira Code',monospace;background:rgba(0,0,0,0.35);border-radius:10px;padding:16px;margin:12px 0;font-size:14px;color:var(--muted);line-height:2.4;text-align:center;">
+    Match Score = <span style="color:var(--orange);">0.9×0.8</span> + <span style="color:var(--blue);">0.1×0.2</span> + <span style="color:var(--pink);">0.0×0.1</span> + <span style="color:var(--green);">0.7×0.6</span><br>
+    = <span style="color:var(--orange);">0.72</span> + <span style="color:var(--blue);">0.02</span> + <span style="color:var(--pink);">0.00</span> + <span style="color:var(--green);">0.42</span><br>
+    = <strong style="color:var(--purple);font-size:20px;">1.16</strong> ← High! Netflix recommends it. ✅
+  </div>
+
+  <div class="tip tip-p">🎬 <strong>The dot product IS the recommendation algorithm.</strong> Netflix does this for every movie in their library and shows you the ones with the highest scores!</div>
+</div>
+
+<div class="card ca">
+  <h3>Try It — Build a Recommendation Engine</h3>
+  <p>Set your taste preferences, then see which movie the "AI" recommends using dot products:</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;">
+    <div>
+      <div style="font-family:'Fredoka One',cursive;color:var(--blue);font-size:15px;margin-bottom:8px;">Your Taste Profile</div>
+      <label style="font-size:13px;color:var(--muted);">Action lover (0-10): <span id="v-action-out">7</span></label>
+      <input type="range" min="0" max="10" value="7" id="v-action" oninput="document.getElementById('v-action-out').textContent=this.value;runReco()">
+      <label style="font-size:13px;color:var(--muted);">Comedy fan (0-10): <span id="v-comedy-out">3</span></label>
+      <input type="range" min="0" max="10" value="3" id="v-comedy" oninput="document.getElementById('v-comedy-out').textContent=this.value;runReco()">
+      <label style="font-size:13px;color:var(--muted);">Romance enjoyer (0-10): <span id="v-rom-out">2</span></label>
+      <input type="range" min="0" max="10" value="2" id="v-rom" oninput="document.getElementById('v-rom-out').textContent=this.value;runReco()">
+      <label style="font-size:13px;color:var(--muted);">Suspense seeker (0-10): <span id="v-sus-out">8</span></label>
+      <input type="range" min="0" max="10" value="8" id="v-sus" oninput="document.getElementById('v-sus-out').textContent=this.value;runReco()">
+    </div>
+    <div id="reco-output"></div>
+  </div>
+</div>
+
+
+<!-- ══ SECTION 2: IMAGES ══ -->
+<div class="section-divider div-b">
+  <div class="label">📸 Part 2 — Images Are Matrices</div>
+</div>
+
+<div class="card cb">
+  <h3>A Photo is Just a Grid of Numbers</h3>
+  <p>When your phone saves a photo, it doesn't save colors — it saves <strong>numbers</strong>. Each pixel is a number from 0 (black) to 255 (white). The whole image is a matrix!</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0;align-items:center;">
+    <div style="text-align:center;">
+      <div style="font-family:'Fredoka One',cursive;color:var(--blue);margin-bottom:10px;font-size:15px;">The "Image" Grid</div>
+      <div id="pixel-grid-display" class="pixel-grid" style="grid-template-columns:repeat(6,32px);justify-content:center;"></div>
+    </div>
+    <div>
+      <div style="font-family:'Fredoka One',cursive;color:var(--blue);margin-bottom:10px;font-size:15px;">Stored as Matrix</div>
+      <div id="pixel-matrix-text" class="code-line" style="font-size:11px;"></div>
+    </div>
+  </div>
+
+  <p style="text-align:center;color:var(--muted);font-size:14px;">Click any pixel to toggle it! Watch the matrix numbers update.</p>
+
+  <div class="tip tip-b">📸 <strong>Real camera math:</strong> A 12-megapixel photo = 4000 × 3000 matrix. A color photo = THREE matrices (one each for Red, Green, Blue). AI image models like DALL·E read these matrices and learn from them!</div>
+</div>
+
+<div class="card cb">
+  <h3>Image Blurring = Matrix Operation (Convolution)</h3>
+  <p>When Instagram applies a blur filter, it's doing a matrix operation called <strong>convolution</strong>. It slides a small "blur matrix" (called a kernel) across the image matrix.</p>
+
+  <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:20px;margin:16px 0;">
+    <div style="font-family:'Fredoka One',cursive;color:var(--blue);font-size:16px;text-align:center;margin-bottom:16px;">Blur Kernel (3×3 matrix)</div>
+    <div style="display:flex;justify-content:center;margin-bottom:16px;">
+      <div>
+        <div style="font-family:'Fira Code',monospace;font-size:13px;color:var(--muted);line-height:2;text-align:center;">
+          [ <span style="color:var(--blue);">1/9, 1/9, 1/9</span> ]<br>
+          [ <span style="color:var(--blue);">1/9, 1/9, 1/9</span> ]<br>
+          [ <span style="color:var(--blue);">1/9, 1/9, 1/9</span> ]
+        </div>
+        <div style="text-align:center;font-size:13px;color:var(--muted);margin-top:8px;">Average 9 neighbours → smooth blur!</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:center;text-align:center;">
+      <div style="background:rgba(59,130,246,0.1);border:2px solid rgba(59,130,246,0.3);border-radius:8px;padding:12px;font-size:13px;color:var(--blue);">Original<br>Image Matrix</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:18px;color:var(--green);">@</div>
+      <div style="background:rgba(249,115,22,0.1);border:2px solid rgba(249,115,22,0.3);border-radius:8px;padding:12px;font-size:13px;color:var(--orange);">Blur<br>Kernel Matrix</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:18px;color:var(--green);">=</div>
+      <div style="background:rgba(16,185,129,0.1);border:2px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;font-size:13px;color:var(--green);">Blurred<br>Image!</div>
+    </div>
+  </div>
+
+  <div class="tip tip-b">🎨 <strong>Every filter is a different kernel matrix!</strong> Sharpen, edge-detect, emboss — all done by sliding different 3×3 matrices across the image. AI learns which kernels detect faces, cats, cars, etc.</div>
+</div>
+
+
+<!-- ══ SECTION 3: LANGUAGE / CHATGPT ══ -->
+<div class="section-divider div-c">
+  <div class="label">🗣️ Part 3 — ChatGPT Turns Words into Vectors</div>
+</div>
+
+<div class="card cc">
+  <h3>Words Are Secretly Vectors Too</h3>
+  <p>ChatGPT can't read words. It reads <strong>numbers</strong>. So every word is converted into a vector of numbers — called a <strong>word embedding</strong>. Similar words get similar vectors!</p>
+
+  <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:20px;margin:16px 0;">
+    <div style="font-family:'Fredoka One',cursive;color:var(--green);font-size:16px;text-align:center;margin-bottom:14px;">Word → Vector (simplified)</div>
+    <div style="display:grid;gap:10px;">
+      <div style="display:grid;grid-template-columns:100px 1fr;gap:12px;align-items:center;">
+        <div style="font-family:'Fredoka One',cursive;color:#f9a8d4;font-size:16px;">king</div>
+        <div style="font-family:'Fira Code',monospace;font-size:12px;color:var(--muted);">[<span style="color:var(--orange);">0.9</span>, <span style="color:var(--blue);">0.1</span>, <span style="color:var(--green);">0.8</span>, <span style="color:var(--purple);">0.2</span>]   ← royalty↑ male↑</div>
+      </div>
+      <div style="display:grid;grid-template-columns:100px 1fr;gap:12px;align-items:center;">
+        <div style="font-family:'Fredoka One',cursive;color:#f9a8d4;font-size:16px;">queen</div>
+        <div style="font-family:'Fira Code',monospace;font-size:12px;color:var(--muted);">[<span style="color:var(--orange);">0.9</span>, <span style="color:var(--blue);">0.9</span>, <span style="color:var(--green);">0.8</span>, <span style="color:var(--purple);">0.2</span>]   ← royalty↑ female↑</div>
+      </div>
+      <div style="display:grid;grid-template-columns:100px 1fr;gap:12px;align-items:center;">
+        <div style="font-family:'Fredoka One',cursive;color:#93c5fd;font-size:16px;">dog</div>
+        <div style="font-family:'Fira Code',monospace;font-size:12px;color:var(--muted);">[<span style="color:var(--orange);">0.1</span>, <span style="color:var(--blue);">0.4</span>, <span style="color:var(--green);">0.1</span>, <span style="color:var(--purple);">0.9</span>]   ← royalty↓ animal↑</div>
+      </div>
+      <div style="display:grid;grid-template-columns:100px 1fr;gap:12px;align-items:center;">
+        <div style="font-family:'Fredoka One',cursive;color:#93c5fd;font-size:16px;">cat</div>
+        <div style="font-family:'Fira Code',monospace;font-size:12px;color:var(--muted);">[<span style="color:var(--orange);">0.1</span>, <span style="color:var(--blue);">0.5</span>, <span style="color:var(--green);">0.1</span>, <span style="color:var(--purple);">0.85</span>]  ← very similar to dog!</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Now the magic: <strong>word math with vectors!</strong></p>
+  <div style="background:rgba(16,185,129,0.08);border:2px solid rgba(16,185,129,0.25);border-radius:10px;padding:18px;margin:12px 0;text-align:center;">
+    <div style="font-family:'Fira Code',monospace;font-size:15px;color:var(--green);">king - man + woman ≈ queen</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:6px;">Subtract the "male" direction, add the "female" direction → land on queen!</div>
+  </div>
+
+  <div class="tip tip-g">🧠 <strong>This is how ChatGPT knows</strong> that "Paris is to France as Tokyo is to ___" = Japan. It's just vector arithmetic!</div>
+</div>
+
+<div class="card cc">
+  <h3>Try It — Word Similarity with Dot Products</h3>
+  <p>Pick a word and see which other words are most "similar" (using dot product on their simplified vectors):</p>
+
+  <div style="margin:14px 0;">
+    <div id="word-buttons" style="margin-bottom:14px;"></div>
+    <div id="word-sim-output"></div>
+  </div>
+</div>
+
+
+<!-- ══ SECTION 4: NEURAL NETWORKS ══ -->
+<div class="section-divider div-d">
+  <div class="label">🧠 Part 4 — Neural Networks = Matrix Multiplication</div>
+</div>
+
+<div class="card cd">
+  <h3>What IS a Neural Network Really?</h3>
+  <p>People think neural networks are magic. They're not. A neural network layer is literally <strong>one matrix multiplication</strong> followed by a simple function.</p>
+
+  <div style="background:rgba(249,115,22,0.08);border:2px solid rgba(249,115,22,0.3);border-radius:12px;padding:20px;margin:16px 0;text-align:center;">
+    <div style="font-family:'Fredoka One',cursive;color:var(--orange);font-size:20px;margin-bottom:8px;">The Whole Formula</div>
+    <div style="font-family:'Fira Code',monospace;font-size:clamp(13px,3vw,18px);color:#fff;margin:12px 0;">output = ReLU( input @ weights + bias )</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:6px;">That's it. The entire "intelligence" of a layer in one line.</div>
+  </div>
+
+  <div style="display:grid;gap:10px;margin:16px 0;">
+    <div style="background:rgba(59,130,246,0.08);border-radius:8px;padding:14px;display:flex;gap:12px;">
+      <div style="font-size:20px;">📊</div>
+      <div><strong style="color:var(--blue);">input</strong><br><span style="font-size:14px;color:var(--muted);">Your data as a vector. For an image: all the pixel numbers flattened into one long vector.</span></div>
+    </div>
+    <div style="background:rgba(249,115,22,0.08);border-radius:8px;padding:14px;display:flex;gap:12px;">
+      <div style="font-size:20px;">⚖️</div>
+      <div><strong style="color:var(--orange);">weights (a matrix!)</strong><br><span style="font-size:14px;color:var(--muted);">Numbers the network learned during training. This is where all the "knowledge" lives. When you train an AI, you're just updating these numbers.</span></div>
+    </div>
+    <div style="background:rgba(139,92,246,0.08);border-radius:8px;padding:14px;display:flex;gap:12px;">
+      <div style="font-size:20px;">⚡</div>
+      <div><strong style="color:var(--purple);">ReLU (activation function)</strong><br><span style="font-size:14px;color:var(--muted);">Just max(0, x) — if the number is negative, make it 0. This tiny step is what lets the network learn non-linear patterns!</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="card cd">
+  <h3>Hands-On: A Neural Net Classifying a Number</h3>
+  <p>Watch a tiny 2-layer neural network decide if a hand-drawn digit might be a 0 or a 1. Every step is a matrix multiplication you already know!</p>
+
+  <div id="nn-demo" style="margin:16px 0;"></div>
+  <div style="text-align:center;">
+    <button class="btn btn-o" onclick="runNN()">Run Network Again 🧠</button>
+  </div>
+</div>
+
+<div class="card cd">
+  <h3>GPT / ChatGPT — Billions of These Operations</h3>
+  <p>ChatGPT has <strong>175 billion weights</strong> stored as matrices. When you type a message:</p>
+
+  <div style="display:grid;gap:8px;margin:16px 0;">
+    <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:14px;display:flex;gap:10px;align-items:center;">
+      <div style="background:rgba(249,115,22,0.2);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'Fredoka One',cursive;color:var(--orange);font-size:14px;flex-shrink:0;">1</div>
+      <div style="font-size:15px;color:rgba(255,255,255,0.72);">Your words → turned into a <strong>matrix of vectors</strong> (word embeddings stacked up)</div>
+    </div>
+    <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:14px;display:flex;gap:10px;align-items:center;">
+      <div style="background:rgba(249,115,22,0.2);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'Fredoka One',cursive;color:var(--orange);font-size:14px;flex-shrink:0;">2</div>
+      <div style="font-size:15px;color:rgba(255,255,255,0.72);">That matrix flows through <strong>96 layers</strong> of matrix multiplications (GPT-3)</div>
+    </div>
+    <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:14px;display:flex;gap:10px;align-items:center;">
+      <div style="background:rgba(249,115,22,0.2);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'Fredoka One',cursive;color:var(--orange);font-size:14px;flex-shrink:0;">3</div>
+      <div style="font-size:15px;color:rgba(255,255,255,0.72);">Each layer does: <strong>input @ weight_matrix + bias</strong> then ReLU</div>
+    </div>
+    <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:14px;display:flex;gap:10px;align-items:center;">
+      <div style="background:rgba(249,115,22,0.2);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'Fredoka One',cursive;color:var(--orange);font-size:14px;flex-shrink:0;">4</div>
+      <div style="font-size:15px;color:rgba(255,255,255,0.72);">The final output matrix is converted back to words → that's the reply you see!</div>
+    </div>
+  </div>
+
+  <div class="tip tip-o">🚀 <strong>Training an AI = finding the right weight matrices.</strong> You start with random matrices, check how wrong the output is, then slightly adjust every number in every matrix. Repeat millions of times. That's machine learning!</div>
+</div>
+
+
+<!-- ══ SECTION 5: PUTTING IT ALL TOGETHER ══ -->
+<div class="section-divider div-e">
+  <div class="label">🌍 Part 5 — Real AI Systems You Use Daily</div>
+</div>
+
+<div class="card ce">
+  <h3>Every App You Use Runs This Math</h3>
+
+  <div style="display:grid;gap:12px;margin:16px 0;">
+    <div style="background:rgba(0,0,0,0.3);border:2px solid rgba(236,72,153,0.2);border-radius:12px;padding:16px;display:grid;grid-template-columns:50px 1fr;gap:14px;align-items:start;">
+      <div style="font-size:32px;">📱</div>
+      <div>
+        <div style="font-family:'Fredoka One',cursive;color:var(--pink);font-size:17px;">Face Unlock on Your Phone</div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px;line-height:1.7;">Your face photo → pixel matrix → matrix multiply through neural network → output vector compared with stored face vector via <strong style="color:#fff;">dot product</strong>. If similarity is high enough → unlocked!</div>
+      </div>
+    </div>
+    <div style="background:rgba(0,0,0,0.3);border:2px solid rgba(236,72,153,0.2);border-radius:12px;padding:16px;display:grid;grid-template-columns:50px 1fr;gap:14px;align-items:start;">
+      <div style="font-size:32px;">🎵</div>
+      <div>
+        <div style="font-family:'Fredoka One',cursive;color:var(--pink);font-size:17px;">Spotify "Discover Weekly"</div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px;line-height:1.7;">Each song → vector (energy, tempo, mood...). Your taste → vector. Every Monday, Spotify computes <strong style="color:#fff;">dot products</strong> of your taste vector against all 80 million songs and picks the top matches.</div>
+      </div>
+    </div>
+    <div style="background:rgba(0,0,0,0.3);border:2px solid rgba(236,72,153,0.2);border-radius:12px;padding:16px;display:grid;grid-template-columns:50px 1fr;gap:14px;align-items:start;">
+      <div style="font-size:32px;">🔍</div>
+      <div>
+        <div style="font-family:'Fredoka One',cursive;color:var(--pink);font-size:17px;">Google Search</div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px;line-height:1.7;">Your search query → vector. Every webpage → vector. Google takes the <strong style="color:#fff;">dot product</strong> of your query vector with every page and returns the highest scores. That's why "fast running shoes" finds "quick sneakers" — similar vectors!</div>
+      </div>
+    </div>
+    <div style="background:rgba(0,0,0,0.3);border:2px solid rgba(236,72,153,0.2);border-radius:12px;padding:16px;display:grid;grid-template-columns:50px 1fr;gap:14px;align-items:start;">
+      <div style="font-size:32px;">🚗</div>
+      <div>
+        <div style="font-family:'Fredoka One',cursive;color:var(--pink);font-size:17px;">Self-Driving Cars</div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px;line-height:1.7;">Camera frames → pixel matrices → 100+ neural network layers (all matrix multiplications) → output vectors telling the car: pedestrian at [x,y], car at [x,y], turn left 5°. All in 50ms!</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card ce">
+  <h3>The Full Journey — One Diagram</h3>
+  <p>Here's how a simple AI image classifier (like Google Photos tagging "dog") actually works:</p>
+
+  <div style="margin:20px 0;">
+    <div style="display:grid;gap:3px;">
+      <div style="background:rgba(59,130,246,0.1);border:2px solid rgba(59,130,246,0.3);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;color:var(--blue);font-size:16px;">📸 Photo of Dog</div>
+        <div style="font-size:12px;color:var(--muted);">256×256 pixels = 65,536 numbers (the input matrix)</div>
+      </div>
+      <div style="text-align:center;font-size:22px;color:var(--muted);">↓</div>
+      <div style="background:rgba(249,115,22,0.1);border:2px solid rgba(249,115,22,0.3);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;color:var(--orange);font-size:16px;">Layer 1: Matrix Multiply + ReLU</div>
+        <div style="font-size:12px;color:var(--muted);">Detects edges and corners (low-level features)</div>
+      </div>
+      <div style="text-align:center;font-size:22px;color:var(--muted);">↓</div>
+      <div style="background:rgba(249,115,22,0.1);border:2px solid rgba(249,115,22,0.3);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;color:var(--orange);font-size:16px;">Layer 2: Matrix Multiply + ReLU</div>
+        <div style="font-size:12px;color:var(--muted);">Detects shapes — circles, curves, fur texture</div>
+      </div>
+      <div style="text-align:center;font-size:22px;color:var(--muted);">↓</div>
+      <div style="background:rgba(249,115,22,0.1);border:2px solid rgba(249,115,22,0.3);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;color:var(--orange);font-size:16px;">Layer 3: Matrix Multiply + ReLU</div>
+        <div style="font-size:12px;color:var(--muted);">Detects objects — ears, eyes, snout</div>
+      </div>
+      <div style="text-align:center;font-size:22px;color:var(--muted);">↓</div>
+      <div style="background:rgba(16,185,129,0.1);border:2px solid rgba(16,185,129,0.3);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;color:var(--green);font-size:16px;">Output Vector (probabilities)</div>
+        <div style="font-family:'Fira Code',monospace;font-size:12px;color:var(--muted);margin-top:6px;">dog: 0.97 | cat: 0.02 | car: 0.00 | ...</div>
+        <div style="font-size:12px;color:var(--green);margin-top:4px;">→ Highest probability wins: "Dog!" ✅</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip tip-pk">🎯 <strong>Every arrow in that diagram is a matrix multiplication.</strong> Nothing else. The entire "intelligence" of the model is stored in the weight matrices learned during training.</div>
+</div>
+
+
+<!-- ══ BIG SUMMARY ══ -->
+<div class="section-divider div-a">
+  <div class="label">⚡ The Summary</div>
+</div>
+
+<div class="card ca" style="text-align:center;">
+  <h3>What You Now Know</h3>
+  <p style="font-size:18px;line-height:1.9;">You now see that <strong>AI is not magic</strong>.<br>It's the math you just learned, running really fast on really big data.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:28px 0;">
+    <div style="background:rgba(139,92,246,0.08);border:2px solid rgba(139,92,246,0.3);border-radius:12px;padding:16px;">
+      <div style="font-size:28px;margin-bottom:8px;">📐</div>
+      <div style="font-family:'Fredoka One',cursive;color:var(--purple);font-size:15px;">Vectors</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">Store everything: words, images, users, movies — all as lists of numbers</div>
+    </div>
+    <div style="background:rgba(249,115,22,0.08);border:2px solid rgba(249,115,22,0.3);border-radius:12px;padding:16px;">
+      <div style="font-size:28px;margin-bottom:8px;">⚡</div>
+      <div style="font-family:'Fredoka One',cursive;color:var(--orange);font-size:15px;">Dot Products</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">Measure similarity — powers every recommendation and search engine</div>
+    </div>
+    <div style="background:rgba(59,130,246,0.08);border:2px solid rgba(59,130,246,0.3);border-radius:12px;padding:16px;">
+      <div style="font-size:28px;margin-bottom:8px;">📊</div>
+      <div style="font-family:'Fredoka One',cursive;color:var(--blue);font-size:15px;">Matrices</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">Store images, datasets, and the "knowledge" inside every AI model</div>
+    </div>
+    <div style="background:rgba(16,185,129,0.08);border:2px solid rgba(16,185,129,0.3);border-radius:12px;padding:16px;">
+      <div style="font-size:28px;margin-bottom:8px;">✖️</div>
+      <div style="font-family:'Fredoka One',cursive;color:var(--green);font-size:15px;">Matrix Multiply</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">Every single layer of every neural network — ChatGPT, image AI, voice AI</div>
+    </div>
+  </div>
+
+  <div style="background:rgba(139,92,246,0.1);border:2px solid rgba(139,92,246,0.3);border-radius:12px;padding:20px;margin-top:10px;">
+    <div style="font-family:'Fredoka One',cursive;font-size:20px;color:var(--purple);">Next up: How does the AI learn the right weight matrices?</div>
+    <div style="font-size:15px;color:var(--muted);margin-top:8px;">That's <strong style="color:#fff;">Gradient Descent</strong> — the algorithm that adjusts millions of numbers until the AI gets things right. And yes, it also uses vectors.</div>
+  </div>
+</div>
+
+</div><!-- end wrapper -->
+
+<script>
+/* ══ RECOMMENDATION ENGINE ══ */
+const MOVIES = [
+  {name:"Mad Max: Fury Road", emoji:"🚗", vec:[9,1,0,8]},
+  {name:"The Notebook",       emoji:"💕", vec:[0,2,10,1]},
+  {name:"The Dark Knight",    emoji:"🦇", vec:[8,2,1,9]},
+  {name:"Bridesmaids",        emoji:"👰", vec:[1,9,3,0]},
+  {name:"Avengers",           emoji:"🦸", vec:[9,3,0,7]},
+  {name:"Pride & Prejudice",  emoji:"📚", vec:[0,3,10,2]},
+  {name:"Get Out",            emoji:"😱", vec:[3,0,1,9]},
+];
+
+function dot(a,b){return a.reduce((s,v,i)=>s+v*b[i],0);}
+function norm(a){return Math.sqrt(a.reduce((s,v)=>s+v*v,0));}
+function cosSim(a,b){const n=norm(a)*norm(b);return n===0?0:dot(a,b)/n;}
+
+function runReco(){
+  const user = [
+    parseFloat(document.getElementById('v-action').value),
+    parseFloat(document.getElementById('v-comedy').value),
+    parseFloat(document.getElementById('v-rom').value),
+    parseFloat(document.getElementById('v-sus').value),
+  ];
+  const scored = MOVIES.map(m=>({...m,score:cosSim(user,m.vec)})).sort((a,b)=>b.score-a.score);
+  let html = '<div style="font-family:\'Fredoka One\',cursive;color:var(--purple);font-size:15px;margin-bottom:8px;">Your recommendations:</div>';
+  scored.forEach((m,i)=>{
+    const pct = Math.round(m.score*100);
+    const col = i===0?'var(--green)':i===1?'var(--blue)':'var(--muted)';
+    html+=`<div style="margin:6px 0;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;">
+        <span>${m.emoji} ${m.name}</span>
+        <span style="color:${col};font-weight:700;">${pct}%</span>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${col};border-radius:3px;transition:width 0.4s;"></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('reco-output').innerHTML=html;
+}
+runReco();
+
+/* ══ PIXEL GRID ══ */
+const GRID_ROWS=6, GRID_COLS=6;
+let pixels = [
+  0,0,200,200,0,0,
+  0,200,255,255,200,0,
+  0,200,255,255,200,0,
+  200,255,100,100,255,200,
+  200,255,255,255,255,200,
+  0,200,200,200,200,0
+];
+
+function renderPixelGrid(){
+  const g = document.getElementById('pixel-grid-display');
+  const m = document.getElementById('pixel-matrix-text');
+  g.innerHTML='';
+  pixels.forEach((v,i)=>{
+    const d=document.createElement('div');
+    d.className='px';
+    d.style.background=`rgb(${v},${v},${v})`;
+    d.style.color=v>128?'rgba(0,0,0,0.6)':'rgba(255,255,255,0.5)';
+    d.textContent=v;
+    d.onclick=()=>{pixels[i]=pixels[i]===0?255:0;renderPixelGrid();};
+    g.appendChild(d);
+  });
+  let rows=[];
+  for(let r=0;r<GRID_ROWS;r++){
+    const row=pixels.slice(r*GRID_COLS,(r+1)*GRID_COLS).map(v=>String(v).padStart(3,' ')).join(',');
+    rows.push('['+row+']');
+  }
+  m.textContent='[\n'+rows.join(',\n')+'\n]';
+}
+renderPixelGrid();
+
+/* ══ WORD SIMILARITY ══ */
+const WORDS = {
+  king:   {vec:[9,1,8,1,0], col:'#f9a8d4'},
+  queen:  {vec:[9,9,8,1,0], col:'#f9a8d4'},
+  man:    {vec:[1,1,2,2,0], col:'#93c5fd'},
+  woman:  {vec:[1,9,2,2,0], col:'#93c5fd'},
+  dog:    {vec:[1,4,1,0,9], col:'#86efac'},
+  cat:    {vec:[1,5,1,0,8], col:'#86efac'},
+  happy:  {vec:[0,2,0,9,0], col:'#fde68a'},
+  sad:    {vec:[0,2,0,1,0], col:'#fde68a'},
+  fast:   {vec:[5,0,0,1,1], col:'#c4b5fd'},
+  slow:   {vec:[1,0,0,1,1], col:'#c4b5fd'},
+};
+
+function buildWordButtons(){
+  const div=document.getElementById('word-buttons');
+  div.innerHTML='';
+  Object.entries(WORDS).forEach(([w,{col}])=>{
+    const b=document.createElement('span');
+    b.className='word-chip';
+    b.style.color=col;b.style.borderColor=col+'88';b.style.background=col+'18';
+    b.textContent=w;
+    b.onclick=()=>showWordSim(w);
+    div.appendChild(b);
+  });
+}
+
+function showWordSim(word){
+  const base=WORDS[word].vec;
+  const scored=Object.entries(WORDS).map(([w,{vec}])=>({w,sim:cosSim(base,vec)})).sort((a,b)=>b.sim-a.sim);
+  let html=`<div style="font-family:'Fredoka One',cursive;color:var(--green);font-size:15px;margin-bottom:10px;">Most similar to "<span style="color:${WORDS[word].col}">${word}</span>":</div>`;
+  scored.forEach(({w,sim})=>{
+    const pct=Math.round(sim*100);
+    const isSelf=w===word;
+    html+=`<div style="margin:5px 0;opacity:${isSelf?0.4:1}">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px;">
+        <span style="color:${WORDS[w].col}">${w}${isSelf?' (itself)':''}</span>
+        <span style="color:var(--green);font-weight:700;">${pct}%</span>
+      </div>
+      <div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:var(--green);border-radius:3px;"></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('word-sim-output').innerHTML=html;
+}
+buildWordButtons();
+showWordSim('king');
+
+/* ══ MINI NEURAL NET DEMO ══ */
+function relu(x){return Math.max(0,x);}
+function softmax(arr){const mx=Math.max(...arr);const exps=arr.map(v=>Math.exp(v-mx));const s=exps.reduce((a,b)=>a+b);return exps.map(v=>v/s);}
+
+function runNN(){
+  // Simulate a tiny 4-input → 3-hidden → 2-output network
+  const input=Array.from({length:4},()=>+(Math.random()*2-1).toFixed(2));
+  const W1=Array.from({length:4},()=>Array.from({length:3},()=>+(Math.random()*2-1).toFixed(2)));
+  const b1=Array.from({length:3},()=>+(Math.random()*0.5).toFixed(2));
+  const W2=Array.from({length:3},()=>Array.from({length:2},()=>+(Math.random()*2-1).toFixed(2)));
+  const b2=Array.from({length:2},()=>+(Math.random()*0.5).toFixed(2));
+
+  // Layer 1
+  const z1=b1.map((b,j)=>+(input.reduce((s,x,i)=>s+x*W1[i][j],0)+b).toFixed(3));
+  const a1=z1.map(v=>+relu(v).toFixed(3));
+  // Layer 2
+  const z2=b2.map((b,j)=>+(a1.reduce((s,x,i)=>s+x*W2[i][j],0)+b).toFixed(3));
+  const probs=softmax(z2).map(v=>(v*100).toFixed(1));
+  const pred=parseFloat(probs[0])>parseFloat(probs[1])?'Digit 0':'Digit 1';
+  const predColor=parseFloat(probs[0])>parseFloat(probs[1])?'var(--blue)':'var(--orange)';
+
+  document.getElementById('nn-demo').innerHTML=`
+    <div style="display:grid;gap:10px;">
+      <div style="background:rgba(59,130,246,0.08);border:2px solid rgba(59,130,246,0.25);border-radius:10px;padding:14px;">
+        <div style="font-family:'Fredoka One',cursive;color:var(--blue);font-size:15px;margin-bottom:6px;">Step 1: Input vector (pixel values)</div>
+        <div style="font-family:'Fira Code',monospace;font-size:13px;color:var(--muted);">input = [${input.join(', ')}]</div>
+      </div>
+      <div style="background:rgba(249,115,22,0.08);border:2px solid rgba(249,115,22,0.25);border-radius:10px;padding:14px;">
+        <div style="font-family:'Fredoka One',cursive;color:var(--orange);font-size:15px;margin-bottom:6px;">Step 2: Layer 1 — input @ W1 + b1 → ReLU</div>
+        <div style="font-family:'Fira Code',monospace;font-size:12px;color:var(--muted);">before ReLU: [${z1.join(', ')}]<br>after  ReLU: [${a1.join(', ')}]</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">ReLU zeroed out ${z1.filter(v=>v<0).length} negative value(s)</div>
+      </div>
+      <div style="background:rgba(139,92,246,0.08);border:2px solid rgba(139,92,246,0.25);border-radius:10px;padding:14px;">
+        <div style="font-family:'Fredoka One',cursive;color:var(--purple);font-size:15px;margin-bottom:6px;">Step 3: Layer 2 — hidden @ W2 + b2 → softmax</div>
+        <div style="font-family:'Fira Code',monospace;font-size:12px;color:var(--muted);">raw: [${z2.join(', ')}]</div>
+      </div>
+      <div style="background:rgba(16,185,129,0.1);border:2px solid rgba(16,185,129,0.3);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-family:'Fredoka One',cursive;color:var(--green);font-size:15px;margin-bottom:8px;">Output probabilities</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">
+          <div><div style="font-size:13px;color:var(--muted);">Digit 0</div><div style="font-size:22px;font-family:'Fredoka One',cursive;color:var(--blue);">${probs[0]}%</div></div>
+          <div><div style="font-size:13px;color:var(--muted);">Digit 1</div><div style="font-size:22px;font-family:'Fredoka One',cursive;color:var(--orange);">${probs[1]}%</div></div>
+        </div>
+        <div style="font-family:'Fredoka One',cursive;font-size:20px;color:${predColor};">→ Prediction: ${pred}</div>
+      </div>
+    </div>`;
+}
+runNN();
+</script>
+</body>
+</html>
